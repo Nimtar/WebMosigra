@@ -1,0 +1,144 @@
+CREATE TABLE achievement
+(
+  id          SMALLSERIAL  NOT NULL
+    CONSTRAINT achievement_pkey
+    PRIMARY KEY,
+  name        VARCHAR(256) NOT NULL,
+  description VARCHAR(512)
+);
+
+CREATE TABLE achievement_condition
+(
+  achievement_id SMALLINT           NOT NULL
+    CONSTRAINT achievement_condition_achievement_id_fkey
+    REFERENCES achievement
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  condition_id   SMALLINT           NOT NULL,
+  reward_count   SMALLINT DEFAULT 1 NOT NULL,
+  CONSTRAINT achievement_condition_pkey
+  PRIMARY KEY (achievement_id, condition_id)
+);
+
+CREATE TABLE condition
+(
+  id          SMALLSERIAL  NOT NULL
+    CONSTRAINT condition_pkey
+    PRIMARY KEY,
+  name        VARCHAR(256) NOT NULL,
+  description VARCHAR(512)
+);
+
+ALTER TABLE achievement_condition
+  ADD CONSTRAINT achievement_condition_condition_id_fkey
+FOREIGN KEY (condition_id) REFERENCES condition
+ON UPDATE CASCADE ON DELETE CASCADE;
+
+CREATE TABLE event
+(
+  id          SMALLSERIAL        NOT NULL
+    CONSTRAINT event_pkey
+    PRIMARY KEY,
+  date        DATE               NOT NULL,
+  time        TIME WITH TIME ZONE,
+  description VARCHAR(512),
+  name        VARCHAR(256)       NOT NULL,
+  type_id     SMALLINT DEFAULT 1 NOT NULL
+);
+
+CREATE TABLE event_type
+(
+  id          SMALLSERIAL NOT NULL
+    CONSTRAINT event_type_pkey
+    PRIMARY KEY,
+  name        VARCHAR(256),
+  description VARCHAR(512)
+);
+
+ALTER TABLE event
+  ADD CONSTRAINT event_event_type_fkey
+FOREIGN KEY (type_id) REFERENCES event_type
+ON UPDATE CASCADE ON DELETE SET DEFAULT;
+
+CREATE TABLE game
+(
+  name        VARCHAR(256) NOT NULL,
+  id          SMALLSERIAL  NOT NULL
+    CONSTRAINT game_pkey
+    PRIMARY KEY,
+  description VARCHAR(512)
+);
+
+CREATE TABLE "user"
+(
+  full_name     VARCHAR(256) NOT NULL,
+  username      VARCHAR(256) NOT NULL
+    CONSTRAINT user_username_key
+    UNIQUE,
+  id            SMALLSERIAL  NOT NULL
+    CONSTRAINT user_pkey
+    PRIMARY KEY,
+  password_hash VARCHAR(64)  NOT NULL,
+  phone_number  VARCHAR(16)
+    CONSTRAINT user_phone_number_check
+    CHECK ((phone_number) :: TEXT ~ '^\+[0-9]{1,15}' :: TEXT
+    )
+);
+
+CREATE TABLE user_achievement
+(
+  user_id              SMALLINT NOT NULL
+    CONSTRAINT user_achievement_user_id_fkey
+    REFERENCES "user"
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  achievement_id       SMALLINT NOT NULL
+    CONSTRAINT user_achievement_achievement_id_fkey
+    REFERENCES achievement
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  achievement_progress SMALLINT,
+  CONSTRAINT user_achievement_pkey
+  PRIMARY KEY (user_id, achievement_id)
+);
+
+CREATE TABLE user_can_play
+(
+  user_id SMALLINT NOT NULL
+    CONSTRAINT user_can_play_user_id_fkey
+    REFERENCES "user"
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  game_id SMALLINT NOT NULL
+    CONSTRAINT user_can_play_game_id_fkey
+    REFERENCES game
+    ON UPDATE CASCADE,
+  CONSTRAINT user_can_play_pkey
+  PRIMARY KEY (user_id, game_id)
+);
+
+CREATE TABLE user_event
+(
+  user_id   SMALLINT NOT NULL
+    CONSTRAINT user_event_user_id_fkey
+    REFERENCES "user"
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  event_id  SMALLINT NOT NULL
+    CONSTRAINT user_event_event_id_fkey
+    REFERENCES event
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  placement SMALLINT,
+  CONSTRAINT user_event_pkey
+  PRIMARY KEY (user_id, event_id)
+);
+
+CREATE TABLE user_wants_to_learn
+(
+  user_id SMALLINT NOT NULL
+    CONSTRAINT user_wants_to_learn_user_id_fkey
+    REFERENCES "user"
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  game_id SMALLINT NOT NULL
+    CONSTRAINT user_wants_to_learn_game_id_fkey
+    REFERENCES game
+    ON UPDATE CASCADE,
+  CONSTRAINT user_wants_to_learn_pkey
+  PRIMARY KEY (user_id, game_id)
+);
+

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<entity-mappings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://java.sun.com/xml/ns/persistence/orm" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm
+   http://java.sun.com/xml/ns/persistence/orm_2_0.xsd" version="2.0">
+    <description>Mapping file for the project Mosigra</description>
+    <entity class="ru.mosigra.entity.AchievementEntity">
+        <table name="achievement" schema="public" catalog="mosigra"/>
+        <attributes>
+            <id name="id">
+                <column name="id" precision="-1"/>
+            </id>
+            <basic name="name">
+                <column name="name" length="256"/>
+            </basic>
+            <basic name="description">
+                <column name="description" nullable="false" length="512"/>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ru.mosigra.entity.AchievementConditionEntity">
+        <table name="achievement_condition" schema="public" catalog="mosigra"/>
+        <id-class class="ru.mosigra.entity.AchievementConditionEntityPK"/>
+        <attributes>
+            <id name="achievementId">
+                <column name="achievement_id" precision="-1"/>
+            </id>
+            <id name="conditionId">
+                <column name="condition_id" precision="-1"/>
+            </id>
+            <basic name="rewardCount">
+                <column name="reward_count" precision="-1"/>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ru.mosigra.entity.ConditionEntity">
+        <table name="condition" schema="public" catalog="mosigra"/>
+        <attributes>
+            <id name="id">
+                <column name="id" precision="-1"/>
+            </id>
+            <basic name="name">
+                <column name="name" length="256"/>
+            </basic>
+            <basic name="description">
+                <column name="description" nullable="false" length="512"/>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ru.mosigra.entity.EventEntity">
+        <table name="event" schema="public" catalog="mosigra"/>
+        <attributes>
+            <id name="id">
+                <column name="id" precision="-1"/>
+            </id>
+            <basic name="date">
+                <column name="date" precision="-1"/>
+            </basic>
+            <basic name="time">
+                <column name="time" nullable="false" precision="-1"/>
+            </basic>
+            <basic name="description">
+                <column name="description" nullable="false" length="512"/>
+            </basic>
+            <basic name="name">
+                <column name="name" length="256"/>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ru.mosigra.entity.EventTypeEntity">
+        <table name="event_type" schema="public" catalog="mosigra"/>
+        <attributes>
+            <id name="id">
+                <column name="id" precision="-1"/>
+            </id>
+            <basic name="name">
+                <column name="name" nullable="false" length="256"/>
+            </basic>
+            <basic name="description">
+                <column name="description" nullable="false" length="512"/>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ru.mosigra.entity.GameEntity">
+        <table name="game" schema="public" catalog="mosigra"/>
+        <attributes>
+            <id name="id">
+                <column name="id" precision="-1"/>
+            </id>
+            <basic name="name">
+                <column name="name" length="256"/>
+            </basic>
+            <basic name="description">
+                <column name="description" nullable="false" length="512"/>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ru.mosigra.entity.UserEntity">
+        <table name="user" schema="public" catalog="mosigra"/>
+        <attributes>
+            <id name="id">
+                <column name="id" precision="-1"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="fullName">
+                <column name="full_name" length="256"/>
+            </basic>
+            <basic name="username">
+                <column name="username" length="256"/>
+            </basic>
+            <basic name="passwordHash">
+                <column name="password_hash" length="64"/>
+            </basic>
+            <basic name="phoneNumber">
+                <column name="phone_number" nullable="false" length="16"/>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ru.mosigra.entity.UserAchievementEntity">
+        <table name="user_achievement" schema="public" catalog="mosigra"/>
+        <id-class class="ru.mosigra.entity.UserAchievementEntityPK"/>
+        <attributes>
+            <id name="userId">
+                <column name="user_id" precision="-1"/>
+            </id>
+            <id name="achievementId">
+                <column name="achievement_id" precision="-1"/>
+            </id>
+            <basic name="achievementProgress">
+                <column name="achievement_progress" nullable="false"
+                  precision="-1"/>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ru.mosigra.entity.UserCanPlayEntity">
+        <table name="user_can_play" schema="public" catalog="mosigra"/>
+        <id-class class="ru.mosigra.entity.UserCanPlayEntityPK"/>
+        <attributes>
+            <id name="userId">
+                <column name="user_id" precision="-1"/>
+            </id>
+            <id name="gameId">
+                <column name="game_id" precision="-1"/>
+            </id>
+        </attributes>
+    </entity>
+    <entity class="ru.mosigra.entity.UserEventEntity">
+        <table name="user_event" schema="public" catalog="mosigra"/>
+        <id-class class="ru.mosigra.entity.UserEventEntityPK"/>
+        <attributes>
+            <id name="userId">
+                <column name="user_id" precision="-1"/>
+            </id>
+            <id name="eventId">
+                <column name="event_id" precision="-1"/>
+            </id>
+            <basic name="placement">
+                <column name="placement" nullable="false" precision="-1"/>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ru.mosigra.entity.UserWantsToLearnEntity">
+        <table name="user_wants_to_learn" schema="public" catalog="mosigra"/>
+        <id-class class="ru.mosigra.entity.UserWantsToLearnEntityPK"/>
+        <attributes>
+            <id name="userId">
+                <column name="user_id" precision="-1"/>
+            </id>
+            <id name="gameId">
+                <column name="game_id" precision="-1"/>
+            </id>
+        </attributes>
+    </entity>
+</entity-mappings>
