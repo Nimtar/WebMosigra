@@ -2,7 +2,10 @@
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence">
     <persistence-unit name="ru.mosigra">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <!--We don't really know whether line ever comes in handy or not-->
         <!--<mapping-file>META-INF/mapping.xml</mapping-file>-->
+
         <class>ru.mosigra.entity.AchievementEntity</class>
         <class>ru.mosigra.entity.AchievementConditionEntity</class>
         <class>ru.mosigra.entity.ConditionEntity</class>

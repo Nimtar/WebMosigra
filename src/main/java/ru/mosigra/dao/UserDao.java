@@ -1,70 +1,166 @@
 package ru.mosigra.dao;
 
+import org.hibernate.TypeMismatchException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Repository;
 import ru.mosigra.entity.UserEntity;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import javax.persistence.criteria.*;
 import java.util.List;
 import java.util.regex.Pattern;
 
 @Repository
 public class UserDao implements Dao {
-	private final CriteriaBuilder criteriaBuilder;
-	private final CriteriaQuery<UserEntity> query;
-	private final Root<UserEntity> fromUser;
 
-	@PersistenceContext(unitName = "ru.mosigra")
+	private EntityManagerFactory managerFactory;
 	private EntityManager entityManager;
+	private CriteriaBuilder criteriaBuilder;
+	private CriteriaQuery<UserEntity> query;
+	private Root<UserEntity> fromUser;
 
-	UserDao () {
-		criteriaBuilder = entityManager.getCriteriaBuilder();
-		query = criteriaBuilder.createQuery(UserEntity.class);
-		fromUser = query.from(UserEntity.class);
-	}
-
-	public List<UserEntity> getAll () {
-		return entityManager.createQuery(query.select(fromUser))
-			.getResultList();
-	}
-
-	public List<UserEntity> getByFullName (String dueName) {
-		Expression<String> fullName = fromUser.get("full_name");
-		Predicate nameLikeDue = criteriaBuilder.like(fullName, dueName);
-		return entityManager.createQuery(
-			query.select(fromUser).where(nameLikeDue)).getResultList();
-	}
-
-	public List<UserEntity> getByPhoneNumber (String dueNumber) {
-		if (isPhoneNumberNotValid(dueNumber)) {
-			return null;
-		}
-
-		Expression<String> phoneNumber = fromUser.get("phone_number");
-		Predicate numberLikeDue = criteriaBuilder.like(phoneNumber, dueNumber);
-		return entityManager.createQuery(
-			query.select(fromUser).where(numberLikeDue)).getResultList();
-	}
-
+	//region Utils
 	private boolean isPhoneNumberNotValid (String number) {
 		return !isPhoneNumberValid(number);
 	}
 
 	private boolean isPhoneNumberValid (String number) {
-		return number != null && Pattern.compile("^\\+[0-9]{1,15}")
+		return number == null || Pattern.compile("^\\+[0-9]{1,15}")
 			.matcher(number)
 			.matches();
 	}
 
-	public UserEntity getByUsername (String dueName) {
-		Expression<String> username = fromUser.get("username");
-		Predicate nameLikeDue = criteriaBuilder.like(username, dueName);
-		return entityManager.createQuery(
-			query.select(fromUser).where(nameLikeDue)).getSingleResult();
+	private void closeManagerAndFactory () {
+		entityManager.close();
+		managerFactory.close();
+	}
+	//endregion
+
+	//region Read operations
+	public List<UserEntity> getAll () {
+		prepareReading();
+		try {
+			return entityManager.createQuery(query.select(fromUser))
+				.getResultList();
+
+		} catch (InvalidDataAccessApiUsageException e) {
+			return null;
+		} finally {
+			closeManagerAndFactory();
+		}
 	}
 
-	public UserEntity getById (int requestedId) {
-		return entityManager.find(UserEntity.class, requestedId);
+	private void prepareReading () {
+		managerFactory = Persistence.createEntityManagerFactory("ru.mosigra");
+		entityManager = managerFactory.createEntityManager();
+		criteriaBuilder = entityManager.getCriteriaBuilder();
+		query = criteriaBuilder.createQuery(UserEntity.class);
+		fromUser = query.from(UserEntity.class);
 	}
+
+	public List<UserEntity> getByFullName (String dueName) {
+		prepareReading();
+		try {
+			Expression<String> fullName = fromUser.get("fullName");
+			Predicate nameLikeDue = criteriaBuilder.like(fullName, dueName);
+			return entityManager.createQuery(
+				query.select(fromUser).where(nameLikeDue)).getResultList();
+		} catch (InvalidDataAccessApiUsageException e) {
+			return null;
+		} finally {
+			closeManagerAndFactory();
+		}
+	}
+
+	public List<UserEntity> getByPhoneNumber (String dueNumber) {
+		prepareReading();
+		try {
+			if (isPhoneNumberNotValid(dueNumber)) {
+				return null;
+			}
+			Expression<String> phoneNumber = fromUser.get("phoneNumber");
+			Predicate numberLikeDue =
+				criteriaBuilder.like(phoneNumber, dueNumber);
+			return entityManager.createQuery(
+				query.select(fromUser).where(numberLikeDue)).getResultList();
+		} catch (InvalidDataAccessApiUsageException e) {
+			return null;
+		} finally {
+			closeManagerAndFactory();
+		}
+	}
+
+	private boolean isTypeMismatch (InvalidDataAccessApiUsageException e) {
+		return e.getRootCause() != null && TypeMismatchException.class.equals(
+			e.getRootCause().getClass());
+	}
+
+	public UserEntity getByUsername (String dueName) {
+		prepareReading();
+		try {
+			Expression<String> username = fromUser.get("username");
+			Predicate nameLikeDue = criteriaBuilder.like(username, dueName);
+			return entityManager.createQuery(
+				query.select(fromUser).where(nameLikeDue)).getSingleResult();
+		} catch (InvalidDataAccessApiUsageException e) {
+			return null;
+		} finally {
+			closeManagerAndFactory();
+		}
+	}
+
+	public UserEntity getById (int id) {
+		return getById((short)id);
+	}
+
+	public UserEntity getById (short requestedId) {
+		prepareReading();
+		try {
+			return entityManager.find(UserEntity.class, requestedId);
+		} catch (InvalidDataAccessApiUsageException e) {
+			return null;
+		} finally {
+			closeManagerAndFactory();
+		}
+	}
+	//endregion
+
+	//region Create operations
+	public UserDao create (String username, String fullName,
+		String passwordHash) throws IllegalArgumentException {
+		return create(username, fullName, passwordHash, null);
+	}
+
+	public UserDao create (String username, String fullName,
+		String passwordHash, String phoneNumber)
+		throws IllegalArgumentException {
+		return create(new UserEntity().setUsername(username)
+			.setFullName(fullName)
+			.setPasswordHash(passwordHash)
+			.setPhoneNumber(phoneNumber));
+	}
+
+	public UserDao create (UserEntity user) throws IllegalArgumentException {
+		if (user == null || isPhoneNumberNotValid(user.getPhoneNumber())) {
+			throw new IllegalArgumentException(
+				"User phone number is invalid" + " ");
+		}
+		prepareCreating();
+		try {
+			entityManager.getTransaction().begin();
+			entityManager.persist(user);
+			entityManager.getTransaction().commit();
+		} finally {
+			closeManagerAndFactory();
+		}
+		return this;
+	}
+
+	private void prepareCreating () {
+		managerFactory = Persistence.createEntityManagerFactory("ru.mosigra");
+		entityManager = managerFactory.createEntityManager();
+	}
+	//endregion
 }

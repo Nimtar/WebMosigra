@@ -16,7 +16,7 @@ public class EventEntity {
 
 	@Id
 	@Column(name = "id", nullable = false)
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public short getId () {
 		return id;
 	}
